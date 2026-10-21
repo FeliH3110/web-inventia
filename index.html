@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventia — Stock, ventas y compras en un solo lugar</title>
+    <meta name="description" content="Inventia convierte tus ventas, compras y stock en tableros, indicadores y predicciones de demanda. Business Intelligence para pymes." />
+    <link rel="icon" type="image/png" href="inventia-logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", system-ui, sans-serif;
+        --color-navy: oklch(0.27 0.08 260);
+        --color-brand: oklch(0.72 0.18 148);
+        --color-background: oklch(0.985 0.005 95);
+        --color-ring: oklch(0.72 0.18 148);
+        --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+    </style>
+    <style>
+      :root {
+        --navy: oklch(0.27 0.08 260);
+        --brand: oklch(0.72 0.18 148);
+        --background: oklch(0.985 0.005 95);
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--background);
+        color: oklch(0.22 0.05 260);
+        font-family: "Inter", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Entrada del hero al cargar */
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+      }
+      .enter {
+        animation: enter 0.8s var(--ease) var(--d, 0ms) both;
+      }
+
+      /* Aparición al hacer scroll (la activa el IntersectionObserver) */
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.7s var(--ease),
+          transform 0.7s var(--ease);
+        transition-delay: var(--d, 0ms);
+      }
+      .reveal.is-visible {
+        opacity: 1;
+        transform: none;
+      }
+
+      .grid-bg {
+        background-image:
+          linear-gradient(to right, color-mix(in oklch, var(--navy) 7%, transparent) 1px, transparent 1px),
+          linear-gradient(to bottom, color-mix(in oklch, var(--navy) 7%, transparent) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+      }
+      .grid-bg--inverted {
+        background-image:
+          linear-gradient(to right, rgb(255 255 255 / 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgb(255 255 255 / 0.08) 1px, transparent 1px);
+        mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 80%);
+      }
+
+      @keyframes shimmer {
+        from {
+          background-position: 200% center;
+        }
+        to {
+          background-position: -200% center;
+        }
+      }
+      .gradient-text {
+        background: linear-gradient(90deg, var(--brand), oklch(0.65 0.15 230), var(--navy), var(--brand));
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shimmer 8s linear infinite;
+      }
+
+      @keyframes float {
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+      .float {
+        animation: float 6s ease-in-out infinite;
+      }
+      .float-delayed {
+        animation: float 6s ease-in-out -3s infinite;
+      }
+
+      @keyframes blob {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        33% {
+          transform: translate(30px, -40px) scale(1.08);
+        }
+        66% {
+          transform: translate(-20px, 20px) scale(0.95);
+        }
+      }
+      .blob {
+        animation: blob 18s ease-in-out infinite;
+      }
+
+      @keyframes marquee {
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      .marquee {
+        animation: marquee 40s linear infinite;
+      }
+      .marquee-wrap:hover .marquee {
+        animation-play-state: paused;
+      }
+
+      @keyframes grow-y {
+        from {
+          transform: scaleY(0);
+        }
+      }
+      .bar {
+        transform: scaleY(0);
+        transform-origin: bottom;
+      }
+      .is-visible .bar {
+        transform: scaleY(1);
+        animation: grow-y 0.9s var(--ease) var(--d, 0ms) both;
+      }
+
+      @keyframes grow-x {
+        from {
+          transform: scaleX(0);
+        }
+      }
+      .stock-bar {
+        transform-origin: left;
+        animation: grow-x 1.2s var(--ease) var(--d, 0ms) both;
+      }
+
+      @keyframes draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      .line {
+        stroke-dasharray: 2000;
+        stroke-dashoffset: 2000;
+      }
+      .is-visible .line {
+        animation: draw 1.8s var(--ease) 0.4s forwards;
+      }
+
+      @keyframes toast {
+        0%,
+        8% {
+          opacity: 0;
+          transform: translateY(12px) scale(0.96);
+        }
+        14%,
+        80% {
+          opacity: 1;
+          transform: none;
+        }
+        88%,
+        100% {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+      }
+      .toast {
+        animation: toast 6s var(--ease) infinite;
+      }
+
+      @keyframes pulse-ring {
+        from {
+          transform: scale(0.8);
+          opacity: 0.6;
+        }
+        to {
+          transform: scale(2.2);
+          opacity: 0;
+        }
+      }
+      .pulse-ring {
+        animation: pulse-ring 2s ease-out infinite;
+      }
+
+      @keyframes swap-in {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+      }
+      .swap-in {
+        animation: swap-in 0.3s var(--ease) both;
+      }
+
+      /* Animación de cobro NFC / QR (misma que el POS de Inventia) */
+      @keyframes nfc-card-tap {
+        0% {
+          opacity: 0;
+          transform: translate(0, -8px) rotate(-5deg);
+        }
+        5%,
+        38% {
+          opacity: 1;
+        }
+        28%,
+        38% {
+          transform: translate(30px, 18px) rotate(2deg);
+        }
+        45%,
+        100% {
+          opacity: 0;
+          transform: translate(30px, 18px) rotate(2deg);
+        }
+      }
+      @keyframes nfc-phone-tap {
+        0%,
+        48% {
+          opacity: 0;
+          transform: translate(0, -10px) rotate(5deg);
+        }
+        53%,
+        88% {
+          opacity: 1;
+        }
+        76%,
+        88% {
+          transform: translate(-38px, 18px) rotate(-2deg);
+        }
+        96%,
+        100% {
+          opacity: 0;
+          transform: translate(-38px, 18px) rotate(-2deg);
+        }
+      }
+      @keyframes nfc-waves {
+        0%,
+        20%,
+        100% {
+          opacity: 0.15;
+        }
+        48%,
+        70% {
+          opacity: 1;
+        }
+      }
+      @keyframes qr-scan {
+        50% {
+          transform: translateY(23px);
+        }
+      }
+      @keyframes qr-beam {
+        0%,
+        100% {
+          opacity: 0.08;
+        }
+        50% {
+          opacity: 0.32;
+        }
+      }
+      .nfc-card-tap {
+        transform-origin: 126px 54px;
+        animation: nfc-card-tap 4.8s ease-in-out infinite;
+      }
+      .nfc-phone-tap {
+        transform-origin: 267px 60px;
+        animation: nfc-phone-tap 4.8s ease-in-out infinite;
+      }
+      .nfc-waves {
+        animation: nfc-waves 2.4s ease-in-out infinite;
+      }
+      .qr-scan-line {
+        animation: qr-scan 1.8s ease-in-out infinite;
+      }
+      .qr-scan-beam {
+        animation: qr-beam 1.8s ease-in-out infinite;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .enter,
+        .gradient-text,
+        .float,
+        .float-delayed,
+        .blob,
+        .marquee,
+        .stock-bar,
+        .toast,
+        .pulse-ring,
+        .swap-in,
+        .is-visible .bar,
+        .is-visible .line,
+        .nfc-card-tap,
+        .nfc-phone-tap,
+        .nfc-waves,
+        .qr-scan-line,
+        .qr-scan-beam {
+          animation: none;
+        }
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+        .bar {
+          transform: none;
+        }
+        .line {
+          stroke-dashoffset: 0;
+        }
+        .nfc-card-tap {
+          transform: translate(30px, 18px) rotate(2deg);
+        }
+        .nfc-phone-tap {
+          opacity: 0;
+        }
+      }
+    /* Gráficos que crecen en horizontal al entrar en pantalla */
+      .grow-x {
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+      .is-visible .grow-x {
+        transform: scaleX(1);
+        animation: grow-x 1s var(--ease) var(--d, 0ms) both;
+      }
+      @keyframes band-in {
+        from {
+          opacity: 0;
+        }
+      }
+      .is-visible .band {
+        animation: band-in 1.2s var(--ease) 0.5s both;
+      }
+      /* Flujo de datos en el diagrama del modelo estrella */
+      @keyframes flow {
+        to {
+          stroke-dashoffset: -24;
+        }
+      }
+      .flow {
+        stroke-dasharray: 4 8;
+        animation: flow 1.2s linear infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .is-visible .grow-x,
+        .is-visible .band,
+        .flow {
+          animation: none;
+        }
+        .grow-x {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="min-h-screen overflow-x-clip">
+      <!-- ───────── Navegación ───────── -->
+      <header class="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
+        <nav
+          id="nav"
+          aria-label="Principal"
+          class="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-transparent px-4 py-2.5 transition-all duration-300 ease-fluid"
+        >
+          <a href="#inicio" class="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Inventia, ir al inicio">
+            <span class="flex items-center gap-2 text-xl font-extrabold tracking-wide">
+              <img src="inventia-logo.png" alt="" width="36" height="36" class="h-9 w-9 shrink-0 object-contain" />
+              <span><span class="text-navy">INVENT</span><span class="text-brand">IA</span></span>
+            </span>
+          </a>
+
+          <ul class="hidden items-center gap-1 md:flex">
+            <li><a href="#bi" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-navy/5 hover:text-navy">Business Intelligence</a></li>
+            <li><a href="#prediccion" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-navy/5 hover:text-navy">Predicción</a></li>
+            <li><a href="#datos" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-navy/5 hover:text-navy">Datos</a></li>
+            <li><a href="#modulos" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-navy/5 hover:text-navy">Módulos</a></li>
+          </ul>
+
+          <div class="flex items-center gap-2">
+            <a
+              href="#bi"
+              class="hidden min-h-10 items-center gap-1.5 rounded-xl bg-navy px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:inline-flex"
+            >
+              Ver el BI <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+            <button
+              id="menu-toggle"
+              type="button"
+              class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-navy hover:bg-navy/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+              aria-expanded="false"
+              aria-controls="mobile-menu"
+              aria-label="Abrir menú"
+            >
+              <span data-icon-open><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></span>
+              <span data-icon-close hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+            </button>
+          </div>
+        </nav>
+
+        <div id="mobile-menu" hidden class="swap-in mx-auto mt-2 max-w-6xl rounded-2xl border border-white/70 bg-white/95 p-3 shadow-xl backdrop-blur-xl md:hidden">
+          <ul class="flex flex-col">
+            <li><a href="#bi" class="flex min-h-11 items-center rounded-xl px-3 text-base font-medium text-navy hover:bg-navy/5">Business Intelligence</a></li>
+            <li><a href="#prediccion" class="flex min-h-11 items-center rounded-xl px-3 text-base font-medium text-navy hover:bg-navy/5">Predicción</a></li>
+            <li><a href="#datos" class="flex min-h-11 items-center rounded-xl px-3 text-base font-medium text-navy hover:bg-navy/5">Datos</a></li>
+            <li><a href="#modulos" class="flex min-h-11 items-center rounded-xl px-3 text-base font-medium text-navy hover:bg-navy/5">Módulos</a></li>
+          </ul>
+          <a href="#bi" class="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-navy text-base font-semibold text-white">
+            Ver el BI <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <!-- ───────── Hero (BI) ───────── -->
+        <section id="inicio" class="relative isolate overflow-hidden pb-20 pt-32 sm:pt-40 lg:pb-28">
+          <div class="grid-bg absolute inset-0 -z-10" aria-hidden="true"></div>
+          <div class="blob absolute -left-32 top-10 -z-10 h-96 w-96 rounded-full bg-brand/25 blur-3xl" aria-hidden="true"></div>
+          <div class="blob absolute -right-24 top-40 -z-10 h-[28rem] w-[28rem] rounded-full bg-sky-300/30 blur-3xl [animation-delay:-6s]" aria-hidden="true"></div>
+
+          <div class="mx-auto grid max-w-6xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-[1fr_1.05fr]">
+            <div class="text-center lg:text-left">
+              <span class="enter inline-flex items-center gap-2 rounded-full border border-brand/30 bg-white/70 px-3 py-1.5 text-xs font-semibold text-emerald-800 shadow-sm backdrop-blur">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-brand shrink-0" aria-hidden="true"><path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/></svg> Business Intelligence para pymes
+              </span>
+
+              <h1 class="enter mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight text-navy sm:text-5xl lg:text-[3.4rem]" style="--d: 100ms">
+                Tus datos ya saben qué vas a vender.<br />
+                <span class="gradient-text">Inventia te lo muestra.</span>
+              </h1>
+
+              <p class="enter mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-600 lg:mx-0" style="--d: 200ms">
+                Cada venta, compra y movimiento de stock se convierte en tableros, indicadores y predicciones de demanda.
+                Dejá de decidir por intuición: mirá qué rota, qué falta y qué se viene.
+              </p>
+
+              <div class="enter mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start" style="--d: 300ms">
+                <a
+                  href="#bi"
+                  class="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-navy px-6 text-base font-semibold text-white shadow-[0_12px_30px_-10px_rgba(15,45,92,0.6)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-12px_rgba(15,45,92,0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+                >
+                  Recorré los tableros
+                  <span class="transition-transform duration-200 group-hover:translate-x-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+                </a>
+                <a
+                  href="#prediccion"
+                  class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-navy/15 bg-white/70 px-6 text-base font-semibold text-navy backdrop-blur transition-colors duration-200 hover:border-navy/30 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44"/><path d="m13.56 11.747 4.332-.924"/><path d="m16 21-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z"/><path d="m6.158 8.633 1.114 4.456"/><path d="m8 21 3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg> Cómo predice
+                </a>
+              </div>
+
+              <ul class="enter mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-600 lg:justify-start" style="--d: 500ms">
+                <li class="flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-emerald-600 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 5 modelos de predicción</li>
+                <li class="flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-emerald-600 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Drill-down en un clic</li>
+                <li class="flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-emerald-600 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Alertas por KPI</li>
+              </ul>
+            </div>
+
+            <!-- Mockup del tablero de BI (datos ilustrativos) -->
+            <div class="enter" style="--d: 250ms">
+              <div class="relative mx-auto w-full max-w-xl" role="img" aria-label="Vista previa del tablero de Business Intelligence de Inventia con ventas netas, margen, precisión de la predicción y un gráfico de forecast contra ventas reales">
+                <div aria-hidden="true" class="relative">
+                  <div class="absolute -inset-6 rounded-[2rem] bg-gradient-to-tr from-brand/30 via-sky-300/20 to-navy/20 blur-2xl"></div>
+
+                  <div class="relative overflow-hidden rounded-2xl border border-white/80 bg-white/95 shadow-[0_30px_80px_-20px_rgba(15,45,92,0.35)] backdrop-blur">
+                    <div class="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+                      <span class="h-2.5 w-2.5 rounded-full bg-red-400"></span>
+                      <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
+                      <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                      <span class="ml-3 rounded-md bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500">inventia / bi / overview</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 p-4 sm:gap-3">
+                      <div class="rounded-xl bg-navy p-3 text-white">
+                        <p class="text-[10px] text-white/70 sm:text-[11px]">Ventas netas</p>
+                        <p class="mt-1 text-sm font-bold tabular-nums sm:text-lg">$ 18,4 M</p>
+                        <p class="mt-1 flex items-center gap-1 text-[10px] font-semibold text-brand sm:text-[11px]"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 shrink-0" aria-hidden="true"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg> +9,2%</p>
+                      </div>
+                      <div class="rounded-xl border border-slate-100 p-3">
+                        <p class="text-[10px] text-slate-500 sm:text-[11px]">Margen estimado</p>
+                        <p class="mt-1 text-sm font-bold tabular-nums text-navy sm:text-lg">31,5%</p>
+                        <p class="mt-1 text-[10px] text-slate-500 sm:text-[11px]">+1,3 pp</p>
+                      </div>
+                      <div class="rounded-xl border border-slate-100 p-3">
+                        <p class="text-[10px] text-slate-500 sm:text-[11px]">Precisión predicción</p>
+                        <p class="mt-1 text-sm font-bold tabular-nums text-navy sm:text-lg">91,6%</p>
+                        <p class="mt-1 text-[10px] text-slate-500 sm:text-[11px]">MAPE 8,4%</p>
+                      </div>
+                    </div>
+
+                    <div class="px-4 pb-4">
+                      <div class="flex items-center justify-between">
+                        <p class="text-xs font-semibold text-navy">Forecast vs. real</p>
+                        <div class="flex items-center gap-3 text-[10px] text-slate-500">
+                          <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-sky-400"></span>Real</span>
+                          <span class="flex items-center gap-1"><span class="h-0.5 w-3 rounded bg-brand"></span>Forecast</span>
+                        </div>
+                      </div>
+                      <div class="is-visible relative mt-3 h-36">
+                        <div class="absolute inset-0 flex items-end gap-1.5" id="hero-bars"></div>
+                        <svg viewBox="0 0 300 144" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
+                          <path class="band" id="hero-band" fill="var(--brand)" opacity="0.14" />
+                          <path class="line" id="hero-line" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                        </svg>
+                      </div>
+                      <div class="mt-4 grid grid-cols-2 gap-2">
+                        <div class="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2">
+                          <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                          <span class="text-[11px] font-semibold text-red-700">18 artículos bajo punto de pedido</span>
+                        </div>
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                          <div class="flex justify-between text-[11px]"><span class="text-slate-600">Nivel de servicio</span><span class="font-semibold text-navy">96,2%</span></div>
+                          <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200"><div class="stock-bar h-full rounded-full bg-emerald-500" style="width: 96%; --d: 700ms"></div></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="float absolute -right-4 -top-6 hidden items-center gap-3 rounded-2xl border border-white bg-white/95 px-4 py-3 shadow-xl sm:flex">
+                    <span class="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <span class="pulse-ring absolute inset-0 rounded-full bg-emerald-300"></span>
+                      <span class="relative"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/></svg></span>
+                    </span>
+                    <div class="text-left">
+                      <p class="text-xs font-bold text-navy">Modelo elegido: Holt-Winters</p>
+                      <p class="text-[11px] text-slate-500">Mejor MAPE para este artículo</p>
+                    </div>
+                  </div>
+
+                  <div class="float-delayed absolute -left-10 top-[60%] hidden items-center gap-3 rounded-2xl border border-white bg-white/95 px-4 py-3 shadow-xl sm:flex">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-600"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 8c0-2.3-.8-4.3-2-6"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/><path d="M4 2C2.8 3.7 2 5.7 2 8"/></svg></span>
+                    <div class="text-left">
+                      <p class="text-xs font-bold text-navy">Alerta de KPI</p>
+                      <p class="text-[11px] text-slate-500">OTIF por debajo del 90%</p>
+                    </div>
+                  </div>
+
+                  <div class="toast absolute -bottom-12 right-6 hidden items-center gap-2 rounded-xl bg-navy px-3 py-2 text-white shadow-lg lg:flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-brand shrink-0" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg>
+                    <span class="text-[11px] font-semibold">Drill-down · Octubre por sucursal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── Marquee ───────── -->
+        <section aria-label="Indicadores y análisis disponibles" class="marquee-wrap relative border-y border-navy/5 bg-white/60 py-5">
+          <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-background to-transparent" aria-hidden="true"></div>
+          <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-background to-transparent" aria-hidden="true"></div>
+          <div class="overflow-hidden">
+            <ul class="marquee flex w-max gap-10" id="marquee"></ul>
+          </div>
+        </section>
+
+        <!-- ───────── Números ───────── -->
+        <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <dl class="grid grid-cols-2 gap-6 lg:grid-cols-4">
+            <div class="reveal flex flex-col-reverse text-center lg:text-left">
+              <dt class="mt-1 text-sm text-slate-600">modelos de predicción compitiendo</dt>
+              <dd class="text-4xl font-extrabold text-navy sm:text-5xl"><span data-count="5">5</span></dd>
+            </div>
+            <div class="reveal flex flex-col-reverse text-center lg:text-left" style="--d: 80ms">
+              <dt class="mt-1 text-sm text-slate-600">tableros de análisis</dt>
+              <dd class="text-4xl font-extrabold text-navy sm:text-5xl"><span data-count="7">7</span></dd>
+            </div>
+            <div class="reveal flex flex-col-reverse text-center lg:text-left" style="--d: 160ms">
+              <dt class="mt-1 text-sm text-slate-600">indicadores listos para usar</dt>
+              <dd class="text-4xl font-extrabold text-navy sm:text-5xl"><span data-count="20" data-prefix="+">+20</span></dd>
+            </div>
+            <div class="reveal flex flex-col-reverse text-center lg:text-left" style="--d: 240ms">
+              <dt class="mt-1 text-sm text-slate-600">clic para llegar al detalle</dt>
+              <dd class="text-4xl font-extrabold text-navy sm:text-5xl"><span data-count="1">1</span></dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- ───────── BI: demo interactiva ───────── -->
+        <section id="bi" class="relative scroll-mt-20 overflow-hidden bg-navy py-20 sm:py-28">
+          <div class="blob absolute -right-40 top-0 h-[30rem] w-[30rem] rounded-full bg-brand/20 blur-3xl" aria-hidden="true"></div>
+          <div class="blob absolute -left-40 bottom-0 h-96 w-96 rounded-full bg-sky-500/20 blur-3xl [animation-delay:-9s]" aria-hidden="true"></div>
+          <div class="grid-bg grid-bg--inverted absolute inset-0 opacity-30" aria-hidden="true"></div>
+
+          <div class="relative mx-auto max-w-6xl px-4 sm:px-6">
+            <div class="reveal mx-auto max-w-3xl text-center">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-brand">Business Intelligence</p>
+              <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-5xl">Todo tu negocio, en tableros que se entienden</h2>
+              <p class="mt-4 text-pretty text-lg leading-relaxed text-white/70">
+                Overview, ventas, compras, inventario y predicción: cada tablero se alimenta solo de tu operación diaria. Tocá una pestaña y mirá
+                qué te muestra.
+              </p>
+            </div>
+
+            <div class="reveal mt-14 grid gap-6 lg:grid-cols-[260px_1fr]" style="--d: 120ms">
+              <div role="tablist" aria-label="Tableros de BI" aria-orientation="vertical" id="bi-tabs" class="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0"></div>
+              <div
+                id="bi-panel"
+                role="tabpanel"
+                tabindex="0"
+                class="rounded-3xl border border-white/10 bg-white/[0.06] p-5 backdrop-blur focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:p-7"
+              ></div>
+            </div>
+
+            <p class="mt-6 text-center text-xs text-white/50">Datos ilustrativos. En Inventia los tableros muestran tu operación real.</p>
+          </div>
+        </section>
+
+        <!-- ───────── Preguntas que responde ───────── -->
+        <section class="py-20 sm:py-28">
+          <div class="mx-auto max-w-6xl px-4 sm:px-6">
+            <div class="reveal mx-auto max-w-2xl text-center">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">Preguntas con respuesta</p>
+              <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Las preguntas de siempre, ahora con números</h2>
+              <p class="mt-4 text-pretty text-lg leading-relaxed text-slate-600">Lo que antes llevaba una tarde de planillas, el BI de Inventia lo responde en segundos.</p>
+            </div>
+            <div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <article class="reveal group h-full rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)]" style="--d: 0ms">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-brand transition-transform duration-200 group-hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44"/><path d="m13.56 11.747 4.332-.924"/><path d="m16 21-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z"/><path d="m6.158 8.633 1.114 4.456"/><path d="m8 21 3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg></span>
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Predicción</span>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-navy">¿Cuánto voy a vender el mes que viene?</h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">Demanda proyectada por artículo, con el modelo que mejor ajustó a su historia.</p>
+              </article>
+              <article class="reveal group h-full rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)]" style="--d: 90ms">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-brand transition-transform duration-200 group-hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 8c0-2.3-.8-4.3-2-6"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/><path d="M4 2C2.8 3.7 2 5.7 2 8"/></svg></span>
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Inventario</span>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-navy">¿Qué artículos están por quebrar?</h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">Stock contra punto de pedido y stock de seguridad, con los quiebres ya detectados.</p>
+              </article>
+              <article class="reveal group h-full rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)]" style="--d: 180ms">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-brand transition-transform duration-200 group-hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></span>
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Compras</span>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-navy">¿Qué proveedores cumplen?</h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">OTIF, lead time, mermas y puntuación promedio de cada proveedor.</p>
+              </article>
+              <article class="reveal group h-full rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)]" style="--d: 0ms">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-brand transition-transform duration-200 group-hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/></svg></span>
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Ventas</span>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-navy">¿Dónde y a quién le vendo más?</h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">Ventas por almacén, top clientes, ticket promedio y descuentos aplicados.</p>
+              </article>
+              <article class="reveal group h-full rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)]" style="--d: 90ms">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-brand transition-transform duration-200 group-hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></svg></span>
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Overview</span>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-navy">¿Cuánto estoy ganando de verdad?</h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">Margen estimado, mix por categoría y ventas contra compras mes a mes.</p>
+              </article>
+              <article class="reveal group h-full rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)]" style="--d: 180ms">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-brand transition-transform duration-200 group-hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M10 5H3"/><path d="M12 19H3"/><path d="M14 3v4"/><path d="M16 17v4"/><path d="M21 12h-9"/><path d="M21 19h-5"/><path d="M21 5h-7"/><path d="M8 10v4"/><path d="M8 12H3"/></svg></span>
+                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Explorador</span>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-navy">¿Y si lo cruzo con otra cosa?</h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">El explorador combina medidas y dimensiones para armar tu propio análisis.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── Predicción ───────── -->
+        <section id="prediccion" class="relative scroll-mt-20 overflow-hidden bg-gradient-to-b from-emerald-50/70 to-background py-20 sm:py-28">
+          <div class="mx-auto grid max-w-6xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2">
+            <div>
+              <div class="reveal max-w-2xl">
+                <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">Predicción de demanda</p>
+                <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Cinco modelos compitiendo por acertar</h2>
+                <p class="mt-4 text-pretty text-lg leading-relaxed text-slate-600">
+                  Inventia proyecta la demanda con varios modelos estadísticos y de machine learning, mide qué tan bien le fue a cada uno y te
+                  muestra el pronóstico junto a lo que realmente pasó.
+                </p>
+              </div>
+              <div class="reveal mt-8 flex flex-wrap gap-2" style="--d: 120ms" id="model-chips"></div>
+              <dl class="reveal mt-8 grid grid-cols-3 gap-3" style="--d: 200ms">
+                <div class="rounded-2xl border border-navy/10 bg-white p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">MAPE</dt>
+                  <dd class="mt-1 text-2xl font-extrabold text-navy">8,4%</dd>
+                  <dd class="text-xs text-slate-500">error promedio</dd>
+                </div>
+                <div class="rounded-2xl border border-navy/10 bg-white p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sesgo</dt>
+                  <dd class="mt-1 text-2xl font-extrabold text-navy">−1,2%</dd>
+                  <dd class="text-xs text-slate-500">ni de más ni de menos</dd>
+                </div>
+                <div class="rounded-2xl border border-navy/10 bg-white p-4">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Precisión</dt>
+                  <dd class="mt-1 text-2xl font-extrabold text-navy">91,6%</dd>
+                  <dd class="text-xs text-slate-500">del pronóstico</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="reveal relative" style="--d: 100ms">
+              <div class="absolute -inset-8 rounded-[2.5rem] bg-gradient-to-br from-emerald-200/50 via-sky-200/30 to-transparent blur-3xl" aria-hidden="true"></div>
+              <div
+                class="relative rounded-3xl border border-white/80 bg-white/90 p-6 shadow-[0_30px_80px_-30px_rgba(15,45,92,0.4)] backdrop-blur sm:p-8"
+                role="img"
+                aria-label="Gráfico de demanda real y pronóstico con banda de confianza, y distribución de los modelos seleccionados"
+              >
+                <div aria-hidden="true">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-sm font-semibold text-navy">Yerba mate 1 kg · demanda mensual</p>
+                      <p class="text-xs text-slate-500">Real vs. pronóstico, próximos 3 meses</p>
+                    </div>
+                    <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Holt-Winters</span>
+                  </div>
+                  <div class="relative mt-6 h-48">
+                    <svg viewBox="0 0 300 180" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
+                      <g stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke">
+                        <line x1="0" y1="45" x2="300" y2="45" vector-effect="non-scaling-stroke" />
+                        <line x1="0" y1="90" x2="300" y2="90" vector-effect="non-scaling-stroke" />
+                        <line x1="0" y1="135" x2="300" y2="135" vector-effect="non-scaling-stroke" />
+                      </g>
+                      <line x1="212.5" y1="0" x2="212.5" y2="180" stroke="#94a3b8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" />
+                      <path class="band" id="pred-band" fill="var(--brand)" opacity="0.18" />
+                      <path class="line" id="pred-real" fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                      <path class="line" id="pred-fc" fill="none" stroke="var(--brand)" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                    </svg>
+                    <span class="absolute right-1 top-0 rounded-md bg-navy px-2 py-0.5 text-[10px] font-semibold text-white">Pronóstico</span>
+                  </div>
+                  <div class="mt-3 flex items-center gap-4 text-[11px] text-slate-500">
+                    <span class="flex items-center gap-1.5"><span class="h-0.5 w-4 rounded bg-sky-500"></span>Real</span>
+                    <span class="flex items-center gap-1.5"><span class="h-0.5 w-4 rounded bg-brand"></span>Pronóstico</span>
+                    <span class="flex items-center gap-1.5"><span class="h-2.5 w-4 rounded-sm bg-brand/20"></span>Banda de confianza</span>
+                  </div>
+
+                  <p class="mt-7 text-sm font-semibold text-navy">Modelos seleccionados en tu catálogo</p>
+                  <div class="mt-3 space-y-2" id="model-share"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── Modelo de datos ───────── -->
+        <section id="datos" class="scroll-mt-20 py-20 sm:py-28">
+          <div class="mx-auto max-w-6xl px-4 sm:px-6">
+            <div class="reveal mx-auto max-w-2xl text-center">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">Detrás de cada gráfico</p>
+              <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Un modelo estrella que ordena tus datos</h2>
+              <p class="mt-4 text-pretty text-lg leading-relaxed text-slate-600">
+                Ventas, compras, inventario y predicciones se guardan como hechos, y se cruzan con cinco dimensiones. Por eso podés filtrar,
+                comparar y bajar al detalle sin esperar un reporte.
+              </p>
+            </div>
+
+            <!-- Diagrama (desktop) -->
+            <div class="reveal mt-14 hidden md:block" style="--d: 100ms">
+              <svg viewBox="0 0 760 400" class="mx-auto w-full max-w-4xl" role="img" aria-label="Modelo estrella: cuatro tablas de hechos al centro conectadas con las dimensiones Tiempo, Artículo, Almacén, Proveedor y Cliente">
+                <g fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round">
+                  <path class="flow" d="M380 200 L380 62" />
+                  <path class="flow" d="M380 200 L132 128" />
+                  <path class="flow" d="M380 200 L628 128" />
+                  <path class="flow" d="M380 200 L170 338" />
+                  <path class="flow" d="M380 200 L590 338" />
+                </g>
+                <g>
+                  <rect x="290" y="12" width="180" height="56" rx="16" fill="#fff" stroke="#0f2d5c" stroke-opacity="0.12" />
+                  <circle cx="312" cy="40" r="5" fill="var(--brand)" />
+                  <text x="326" y="36" fill="#0f2d5c" font-size="15" font-weight="700">Tiempo</text>
+                  <text x="326" y="55" fill="#64748b" font-size="11.5">Mes · trimestre · día</text>
+                </g>
+                <g>
+                  <rect x="42" y="100" width="180" height="56" rx="16" fill="#fff" stroke="#0f2d5c" stroke-opacity="0.12" />
+                  <circle cx="64" cy="128" r="5" fill="var(--brand)" />
+                  <text x="78" y="124" fill="#0f2d5c" font-size="15" font-weight="700">Artículo</text>
+                  <text x="78" y="143" fill="#64748b" font-size="11.5">Categoría · marca</text>
+                </g>
+                <g>
+                  <rect x="538" y="100" width="180" height="56" rx="16" fill="#fff" stroke="#0f2d5c" stroke-opacity="0.12" />
+                  <circle cx="560" cy="128" r="5" fill="var(--brand)" />
+                  <text x="574" y="124" fill="#0f2d5c" font-size="15" font-weight="700">Cliente</text>
+                  <text x="574" y="143" fill="#64748b" font-size="11.5">DNI / CUIT</text>
+                </g>
+                <g>
+                  <rect x="80" y="310" width="180" height="56" rx="16" fill="#fff" stroke="#0f2d5c" stroke-opacity="0.12" />
+                  <circle cx="102" cy="338" r="5" fill="var(--brand)" />
+                  <text x="116" y="334" fill="#0f2d5c" font-size="15" font-weight="700">Almacén</text>
+                  <text x="116" y="353" fill="#64748b" font-size="11.5">Sucursal · provincia</text>
+                </g>
+                <g>
+                  <rect x="500" y="310" width="180" height="56" rx="16" fill="#fff" stroke="#0f2d5c" stroke-opacity="0.12" />
+                  <circle cx="522" cy="338" r="5" fill="var(--brand)" />
+                  <text x="536" y="334" fill="#0f2d5c" font-size="15" font-weight="700">Proveedor</text>
+                  <text x="536" y="353" fill="#64748b" font-size="11.5">CUIT · razón social</text>
+                </g>
+                <g>
+                  <rect x="270" y="130" width="220" height="140" rx="20" fill="#0f2d5c" />
+                  <text x="380" y="160" text-anchor="middle" fill="var(--brand)" font-size="12" font-weight="700" letter-spacing="2">HECHOS</text>
+                  <text x="380" y="186" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Ventas</text>
+                  <text x="380" y="208" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Compras</text>
+                  <text x="380" y="230" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Inventario (snapshot)</text>
+                  <text x="380" y="252" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Predicción de demanda</text>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Versión mobile -->
+            <div class="reveal mt-12 md:hidden">
+              <div class="rounded-3xl bg-navy p-6 text-center">
+                <p class="text-xs font-bold tracking-[0.2em] text-brand">HECHOS</p>
+                <p class="mt-2 font-semibold leading-relaxed text-white">Ventas · Compras · Inventario · Predicción de demanda</p>
+              </div>
+              <div class="mx-auto h-6 w-0.5 bg-brand"></div>
+              <ul class="grid grid-cols-2 gap-2">
+                <li class="rounded-2xl border border-navy/10 bg-white p-3 text-center"><p class="font-bold text-navy">Tiempo</p><p class="text-xs text-slate-500">Mes · trimestre · día</p></li>
+                <li class="rounded-2xl border border-navy/10 bg-white p-3 text-center"><p class="font-bold text-navy">Artículo</p><p class="text-xs text-slate-500">Categoría · marca</p></li>
+                <li class="rounded-2xl border border-navy/10 bg-white p-3 text-center"><p class="font-bold text-navy">Cliente</p><p class="text-xs text-slate-500">DNI / CUIT</p></li>
+                <li class="rounded-2xl border border-navy/10 bg-white p-3 text-center"><p class="font-bold text-navy">Almacén</p><p class="text-xs text-slate-500">Sucursal · provincia</p></li>
+                <li class="col-span-2 rounded-2xl border border-navy/10 bg-white p-3 text-center"><p class="font-bold text-navy">Proveedor</p><p class="text-xs text-slate-500">CUIT · razón social</p></li>
+              </ul>
+            </div>
+
+            <div class="mt-14 grid gap-4 md:grid-cols-3">
+              <div class="reveal flex gap-4 rounded-3xl border border-navy/10 bg-white p-6" style="--d: 0ms">
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand/25 to-sky-200/50 text-navy"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg></span>
+                <div><h3 class="font-bold text-navy">Drill-down en todo</h3><p class="mt-1 text-sm leading-relaxed text-slate-600">Hacé clic en un mes, una barra o una fila y bajás al detalle que explica el número.</p></div>
+              </div>
+              <div class="reveal flex gap-4 rounded-3xl border border-navy/10 bg-white p-6" style="--d: 90ms">
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand/25 to-sky-200/50 text-navy"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 8c0-2.3-.8-4.3-2-6"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/><path d="M4 2C2.8 3.7 2 5.7 2 8"/></svg></span>
+                <div><h3 class="font-bold text-navy">Alertas por umbral</h3><p class="mt-1 text-sm leading-relaxed text-slate-600">Definí un mínimo y un máximo para cada KPI y enterate cuando se sale de rango.</p></div>
+              </div>
+              <div class="reveal flex gap-4 rounded-3xl border border-navy/10 bg-white p-6" style="--d: 180ms">
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand/25 to-sky-200/50 text-navy"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 shrink-0" aria-hidden="true"><path d="M10 5H3"/><path d="M12 19H3"/><path d="M14 3v4"/><path d="M16 17v4"/><path d="M21 12h-9"/><path d="M21 19h-5"/><path d="M21 5h-7"/><path d="M8 10v4"/><path d="M8 12H3"/></svg></span>
+                <div><h3 class="font-bold text-navy">Filtros que cruzan todo</h3><p class="mt-1 text-sm leading-relaxed text-slate-600">Rango de meses, almacén, categoría o marca: cambiás un filtro y el tablero se ajusta.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── Módulos: fuentes del BI ───────── -->
+        <section id="modulos" class="scroll-mt-20 bg-white/60 py-20 sm:py-28">
+          <div class="mx-auto max-w-6xl px-4 sm:px-6">
+            <div class="reveal mx-auto max-w-2xl text-center">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">De dónde salen los datos</p>
+              <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Tu operación diaria alimenta al BI</h2>
+              <p class="mt-4 text-pretty text-lg leading-relaxed text-slate-600">
+                No hay que exportar ni cargar nada aparte: cada módulo de Inventia registra la operación y el BI la convierte en información.
+              </p>
+            </div>
+
+            <div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <article class="reveal group relative flex flex-col overflow-hidden rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)] sm:p-7 " style="--d: 0ms">
+                <span class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy transition-colors duration-200 group-hover:bg-brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 shrink-0" aria-hidden="true"><path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/></svg></span>
+                <h3 class="relative mt-5 text-xl font-bold text-navy">Ventas y punto de venta</h3>
+                <p class="relative mt-2 flex-1 leading-relaxed text-slate-600">POS con cobro en efectivo, tarjeta, NFC o QR, facturación electrónica y clientes.</p>
+                <p class="relative mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> Alimenta: ventas, ticket, clientes</p>
+              </article>
+              <article class="reveal group relative flex flex-col overflow-hidden rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)] sm:p-7 " style="--d: 90ms">
+                <span class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy transition-colors duration-200 group-hover:bg-brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 shrink-0" aria-hidden="true"><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/></svg></span>
+                <h3 class="relative mt-5 text-xl font-bold text-navy">Inventario</h3>
+                <p class="relative mt-2 flex-1 leading-relaxed text-slate-600">Artículos, categorías, marcas, listas de precios y descuentos.</p>
+                <p class="relative mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> Alimenta: dimensión artículo, margen</p>
+              </article>
+              <article class="reveal group relative flex flex-col overflow-hidden rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)] sm:p-7 " style="--d: 180ms">
+                <span class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy transition-colors duration-200 group-hover:bg-brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 shrink-0" aria-hidden="true"><path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11"/><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z"/><path d="M6 13h12"/><path d="M6 17h12"/></svg></span>
+                <h3 class="relative mt-5 text-xl font-bold text-navy">Stock y almacenes</h3>
+                <p class="relative mt-2 flex-1 leading-relaxed text-slate-600">Varios depósitos, movimientos trazables y pedidos de reposición.</p>
+                <p class="relative mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> Alimenta: snapshot de stock, quiebres</p>
+              </article>
+              <article class="reveal group relative flex flex-col overflow-hidden rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)] sm:p-7 " style="--d: 0ms">
+                <span class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy transition-colors duration-200 group-hover:bg-brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 shrink-0" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></span>
+                <h3 class="relative mt-5 text-xl font-bold text-navy">Compras</h3>
+                <p class="relative mt-2 flex-1 leading-relaxed text-slate-600">Órdenes de compra, recepciones y conciliación de facturas de proveedores.</p>
+                <p class="relative mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> Alimenta: OTIF, lead time, mermas</p>
+              </article>
+              <article class="reveal group relative flex flex-col overflow-hidden rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)] sm:p-7 " style="--d: 90ms">
+                <span class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy transition-colors duration-200 group-hover:bg-brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 shrink-0" aria-hidden="true"><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/><circle cx="18.5" cy="15.5" r="2.5"/><path d="M20.27 17.27 22 19"/></svg></span>
+                <h3 class="relative mt-5 text-xl font-bold text-navy">Portal de proveedores</h3>
+                <p class="relative mt-2 flex-1 leading-relaxed text-slate-600">Tus proveedores siguen sus órdenes, artículos y envíos.</p>
+                <p class="relative mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> Alimenta: cumplimiento de entregas</p>
+              </article>
+              <article class="reveal group relative flex flex-col overflow-hidden rounded-3xl border border-navy/10 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/50 hover:shadow-[0_25px_60px_-25px_rgba(15,45,92,0.35)] sm:p-7 " style="--d: 180ms">
+                <span class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy transition-colors duration-200 group-hover:bg-brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 shrink-0" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                <h3 class="relative mt-5 text-xl font-bold text-navy">Gestión</h3>
+                <p class="relative mt-2 flex-1 leading-relaxed text-slate-600">Usuarios, roles y permisos, cajas, cierres de caja y medios de pago.</p>
+                <p class="relative mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> Controla: quién ve cada tablero</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── Punto de venta (cada cobro es un dato) ───────── -->
+        <section id="punto-de-venta" class="relative scroll-mt-20 overflow-hidden bg-gradient-to-b from-sky-50/80 to-background py-20 sm:py-28">
+          <div class="mx-auto grid max-w-6xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2">
+            <div>
+              <div class="reveal max-w-2xl">
+                <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">Punto de venta</p>
+                <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Cada cobro es un dato más para decidir</h2>
+                <p class="mt-4 text-pretty text-lg leading-relaxed text-slate-600">
+                  Efectivo, tarjeta, contactless o QR. El POS confirma el pago, emite el comprobante y la venta aparece en los tableros sin que nadie
+                  la cargue dos veces.
+                </p>
+              </div>
+              <ul class="reveal mt-8 space-y-4" style="--d: 150ms">
+                <li class="flex gap-4">
+                  <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/20 text-emerald-700"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+                  <div><p class="font-semibold text-navy">Acercar y listo</p><p class="text-slate-600">Tarjetas y celulares con NFC se cobran con un toque.</p></div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/20 text-emerald-700"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+                  <div><p class="font-semibold text-navy">QR de billeteras virtuales</p><p class="text-slate-600">El cliente escanea con su app y el pago se confirma solo.</p></div>
+                </li>
+                <li class="flex gap-4">
+                  <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/20 text-emerald-700"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+                  <div><p class="font-semibold text-navy">Directo al BI</p><p class="text-slate-600">Cada venta suma a ventas netas, ticket promedio y mix por categoría.</p></div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="reveal relative" style="--d: 100ms">
+              <div class="absolute -inset-8 rounded-[2.5rem] bg-gradient-to-br from-sky-200/50 via-brand/20 to-transparent blur-3xl" aria-hidden="true"></div>
+              <div class="relative rounded-3xl border border-white/80 bg-white/90 p-6 shadow-[0_30px_80px_-30px_rgba(15,45,92,0.4)] backdrop-blur sm:p-8">
+                <div class="mx-auto mb-6 flex w-full max-w-xs rounded-full bg-slate-100 p-1" role="group" aria-label="Medio de cobro">
+                  <button type="button" data-mode="contactless" aria-pressed="true" class="pay-mode flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/><path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/><path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/><path d="M16.37 2a20.16 20.16 0 0 1 0 20"/></svg> Contactless
+                  </button>
+                  <button type="button" data-mode="qr" aria-pressed="false" class="pay-mode flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg> Código QR
+                  </button>
+                </div>
+                <div id="pay-stage" class="swap-in flex flex-col items-center text-center">
+                  <div id="pay-illustration" class="relative h-56 w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-b from-sky-50 to-white" role="img"></div>
+                  <div class="mt-4 space-y-1">
+                    <p id="pay-title" class="text-lg font-semibold text-navy"></p>
+                    <p id="pay-text" class="text-sm text-slate-500"></p>
+                  </div>
+                  <strong class="mt-4 font-mono text-3xl text-emerald-600">$ 48.750,00</strong>
+                  <p class="mt-1 text-sm text-slate-500">Venta N.º 1284</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── Cómo funciona ───────── -->
+        <section id="como-funciona" class="scroll-mt-20 py-20 sm:py-28">
+          <div class="mx-auto max-w-6xl px-4 sm:px-6">
+            <div class="reveal mx-auto max-w-2xl text-center">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">Cómo funciona</p>
+              <h2 class="mt-3 text-balance text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">De la operación a la decisión, en tres pasos</h2>
+              <p class="mt-4 text-pretty text-lg leading-relaxed text-slate-600">Vos trabajás como siempre. Inventia se encarga de convertir eso en información.</p>
+            </div>
+            <div class="relative mt-16">
+              <div class="absolute left-[16.6%] right-[16.6%] top-7 hidden h-0.5 bg-gradient-to-r from-brand via-sky-400 to-navy md:block" aria-hidden="true"></div>
+              <ol class="relative grid gap-10 md:grid-cols-3 md:gap-6">
+                <li class="reveal relative text-center" style="--d: 0ms">
+                  <span class="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-xl font-extrabold text-navy shadow-[0_10px_30px_-10px_rgba(15,45,92,0.4)] ring-4 ring-background">1</span>
+                  <h3 class="mt-6 text-xl font-bold text-navy">Operás</h3>
+                  <p class="mx-auto mt-2 max-w-xs leading-relaxed text-slate-600">Vendés, comprás, recibís y movés stock desde los módulos de Inventia.</p>
+                </li>
+                <li class="reveal relative text-center" style="--d: 150ms">
+                  <span class="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-xl font-extrabold text-navy shadow-[0_10px_30px_-10px_rgba(15,45,92,0.4)] ring-4 ring-background">2</span>
+                  <h3 class="mt-6 text-xl font-bold text-navy">Inventia ordena</h3>
+                  <p class="mx-auto mt-2 max-w-xs leading-relaxed text-slate-600">Cada operación entra al modelo estrella como un hecho, listo para cruzar.</p>
+                </li>
+                <li class="reveal relative text-center" style="--d: 300ms">
+                  <span class="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-xl font-extrabold text-navy shadow-[0_10px_30px_-10px_rgba(15,45,92,0.4)] ring-4 ring-background">3</span>
+                  <h3 class="mt-6 text-xl font-bold text-navy">Decidís</h3>
+                  <p class="mx-auto mt-2 max-w-xs leading-relaxed text-slate-600">Tableros, alertas y predicciones te dicen qué comprar, cuándo y cuánto.</p>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <!-- ───────── CTA final ───────── -->
+        <section class="px-4 pb-20 sm:px-6 sm:pb-28">
+          <div class="reveal mx-auto max-w-6xl">
+            <div class="relative isolate overflow-hidden rounded-[2rem] bg-navy px-6 py-16 text-center sm:px-16 sm:py-20">
+              <div class="blob absolute -left-20 -top-20 -z-10 h-72 w-72 rounded-full bg-brand/40 blur-3xl" aria-hidden="true"></div>
+              <div class="blob absolute -bottom-24 -right-16 -z-10 h-80 w-80 rounded-full bg-sky-500/30 blur-3xl [animation-delay:-7s]" aria-hidden="true"></div>
+              <div class="grid-bg grid-bg--inverted absolute inset-0 -z-10 opacity-40" aria-hidden="true"></div>
+
+              <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-brand shrink-0" aria-hidden="true"><path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/></svg> Business Intelligence incluido</span>
+              <h2 class="mx-auto mt-6 max-w-2xl text-balance text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+                Dejá de adivinar. <span class="text-brand">Empezá a anticipar.</span>
+              </h2>
+              <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">Tus ventas, compras y stock convertidos en decisiones, desde el primer día.</p>
+              <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <a
+                  href="#bi"
+                  class="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-7 text-base font-bold text-navy shadow-[0_0_40px_-5px_var(--brand)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_60px_-5px_var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy sm:w-auto"
+                >
+                  Volver a los tableros
+                  <span class="transition-transform duration-200 group-hover:translate-x-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+                </a>
+                <a
+                  href="#prediccion"
+                  class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/20 px-7 text-base font-semibold text-white transition-colors duration-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44"/><path d="m13.56 11.747 4.332-.924"/><path d="m16 21-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z"/><path d="m6.158 8.633 1.114 4.456"/><path d="m8 21 3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg> Ver la predicción
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="border-t border-navy/10 bg-white/60">
+        <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 py-10 text-center sm:px-6 md:flex-row md:text-left">
+          <div>
+            <span class="flex items-center justify-center gap-2 text-xl font-extrabold tracking-wide md:justify-start">
+              <img src="inventia-logo.png" alt="" width="36" height="36" class="h-9 w-9 shrink-0 object-contain" />
+              <span><span class="text-navy">INVENT</span><span class="text-brand">IA</span></span>
+            </span>
+            <p class="mt-2 text-sm text-slate-600">
+              Business Intelligence, stock, ventas y compras para pymes.<br class="hidden md:block" />
+              Proyecto Final · Ingeniería en Sistemas de Información.
+            </p>
+          </div>
+          <ul class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+            <li><a href="#bi" class="transition-colors duration-200 hover:text-navy">Business Intelligence</a></li>
+            <li><a href="#prediccion" class="transition-colors duration-200 hover:text-navy">Predicción</a></li>
+            <li><a href="#datos" class="transition-colors duration-200 hover:text-navy">Datos</a></li>
+            <li><a href="#modulos" class="transition-colors duration-200 hover:text-navy">Módulos</a></li>
+          </ul>
+          <p class="text-sm text-slate-500">© <span id="year">2026</span> Inventia</p>
+        </div>
+      </footer>
+    </div>
+
+    <template id="tpl-contactless">
+      <svg viewBox="0 0 360 220" class="h-full w-full" aria-hidden="true">
+        <defs>
+          <linearGradient id="point-body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b5f1" /><stop offset="1" stop-color="#007ebd" /></linearGradient>
+          <filter id="point-shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity="0.18" /></filter>
+        </defs>
+        <ellipse cx="190" cy="202" rx="92" ry="10" fill="#0f2d5c" opacity="0.08" />
+        <g class="nfc-card-tap" filter="url(#point-shadow)">
+          <rect x="68" y="18" width="116" height="70" rx="12" fill="#172554" />
+          <rect x="82" y="35" width="25" height="18" rx="4" fill="#f8d66d" />
+          <path d="M150 39c8 7 8 20 0 27M141 44c5 4 5 13 0 17" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="4" />
+          <text x="83" y="73" fill="#fff" font-size="8" font-weight="700" letter-spacing="1.4">CONTACTLESS</text>
+        </g>
+        <g class="nfc-phone-tap" filter="url(#point-shadow)">
+          <rect x="238" y="12" width="58" height="96" rx="12" fill="#172554" />
+          <rect x="243" y="19" width="48" height="79" rx="8" fill="#e0f7ff" />
+          <rect x="255" y="16" width="24" height="3" rx="1.5" fill="#64748b" />
+          <path d="M258 49c7-7 18-7 25 0M263 55c4-4 11-4 15 0M270.5 62h.1" fill="none" stroke="#009ee3" stroke-linecap="round" stroke-width="3.5" />
+          <circle cx="267" cy="83" r="9" fill="#009ee3" />
+          <path d="m263 83 3 3 6-7" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+        </g>
+        <g class="nfc-waves" fill="none" stroke="#009ee3" stroke-linecap="round">
+          <path d="M172 91c12 8 18 18 18 29" stroke-width="5" />
+          <path d="M181 82c18 11 28 24 28 39" stroke-width="5" opacity="0.65" />
+          <path d="M190 72c25 15 38 31 38 49" stroke-width="5" opacity="0.35" />
+        </g>
+        <g filter="url(#point-shadow)">
+          <path d="M134 112c0-12 10-22 22-22h103c12 0 22 10 22 22v83H134z" fill="url(#point-body)" />
+          <rect x="154" y="108" width="107" height="54" rx="8" fill="#ecfeff" />
+          <text x="207.5" y="129" text-anchor="middle" fill="#003f75" font-size="9" font-weight="700">ACERCÁ TU TARJETA</text>
+          <path d="M198 142c5-5 14-5 19 0M202 147c3-3 8-3 11 0M207.5 152h.1" fill="none" stroke="#009ee3" stroke-linecap="round" stroke-width="3" />
+          <circle cx="161" cy="178" r="4" fill="#ef4444" />
+          <circle cx="177" cy="178" r="4" fill="#facc15" />
+          <circle cx="193" cy="178" r="4" fill="#22c55e" />
+          <text x="250" y="183" text-anchor="end" fill="#fff" font-size="11" font-weight="800">point</text>
+        </g>
+      </svg>
+    </template>
+
+    <template id="tpl-qr">
+      <svg viewBox="0 0 360 220" class="h-full w-full" aria-hidden="true">
+        <defs>
+          <linearGradient id="point-body-qr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b5f1" /><stop offset="1" stop-color="#007ebd" /></linearGradient>
+          <filter id="point-shadow-qr" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity="0.18" /></filter>
+        </defs>
+        <ellipse cx="190" cy="202" rx="92" ry="10" fill="#0f2d5c" opacity="0.08" />
+        <path class="qr-scan-beam" d="M158 50 211 119 176 160 152 98z" fill="#22c55e" />
+        <g filter="url(#point-shadow-qr)">
+          <path d="M134 112c0-12 10-22 22-22h103c12 0 22 10 22 22v83H134z" fill="url(#point-body-qr)" />
+          <rect x="154" y="108" width="107" height="54" rx="8" fill="#ecfeff" />
+          <text x="207.5" y="129" text-anchor="middle" fill="#003f75" font-size="9" font-weight="700">ESCANEÁ ESTE QR</text>
+          <g fill="#003f75">
+            <path d="M192 133h10v10h-10zm3 3v4h4v-4z" fill-rule="evenodd" />
+            <path d="M213 133h10v10h-10zm3 3v4h4v-4z" fill-rule="evenodd" />
+            <path d="M192 145h10v10h-10zm3 3v4h4v-4z" fill-rule="evenodd" />
+            <path d="M205 133h4v4h-4zm1 7h5v4h-5zm7 6h10v4h-10zm-8 2h5v7h-5z" />
+            <rect class="qr-scan-line" x="190" y="132" width="35" height="2" rx="1" fill="#22c55e" />
+          </g>
+          <circle cx="161" cy="178" r="4" fill="#ef4444" />
+          <circle cx="177" cy="178" r="4" fill="#facc15" />
+          <circle cx="193" cy="178" r="4" fill="#22c55e" />
+          <text x="250" y="183" text-anchor="end" fill="#fff" font-size="11" font-weight="800">point</text>
+        </g>
+        <g filter="url(#point-shadow-qr)">
+          <rect x="96" y="17" width="72" height="112" rx="14" fill="#172554" />
+          <rect x="102" y="25" width="60" height="94" rx="9" fill="#dff7ff" />
+          <circle cx="132" cy="31" r="3" fill="#475569" />
+          <path d="M111 48v-8h8M153 48v-8h-8M111 94v8h8M153 94v8h-8" fill="none" stroke="#009ee3" stroke-linecap="round" stroke-width="4" />
+          <circle cx="132" cy="71" r="13" fill="#009ee3" opacity="0.14" />
+          <path d="M126 71h12M132 65v12" stroke="#009ee3" stroke-linecap="round" stroke-width="3" />
+        </g>
+      </svg>
+    </template>
+
+
+    <script>
+      (function () {
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        // ── Nav: fondo "glass" al scrollear ──
+        var nav = document.getElementById("nav");
+        var glass = ["bg-white/80", "border-white/70", "shadow-[0_10px_40px_-15px_rgba(15,45,92,0.3)]", "backdrop-blur-xl"];
+        var menuOpen = false;
+        function paintNav() {
+          var on = window.scrollY > 12 || menuOpen;
+          glass.forEach(function (c) { nav.classList.toggle(c, on); });
+          nav.classList.toggle("border-transparent", !on);
+        }
+        window.addEventListener("scroll", paintNav, { passive: true });
+        paintNav();
+
+        // ── Menú mobile ──
+        var toggle = document.getElementById("menu-toggle");
+        var menu = document.getElementById("mobile-menu");
+        function setMenu(open) {
+          menuOpen = open;
+          menu.hidden = !open;
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
+          toggle.querySelector("[data-icon-open]").hidden = open;
+          toggle.querySelector("[data-icon-close]").hidden = !open;
+          paintNav();
+        }
+        toggle.addEventListener("click", function () { setMenu(!menuOpen); });
+        menu.querySelectorAll("a").forEach(function (a) { a.addEventListener("click", function () { setMenu(false); }); });
+
+        // ── Marquee (lista duplicada para un loop continuo) ──
+        var caps = ["Predicción de demanda", "Forecast vs. real", "Drill-down", "Margen estimado", "Nivel de servicio", "OTIF", "Lead time", "Punto de pedido", "Stock de seguridad", "Quiebres detectados", "Ticket promedio", "Mix por categoría", "Alertas por KPI", "Modelo estrella"];
+        var marquee = document.getElementById("marquee");
+        caps.concat(caps).forEach(function (text, i) {
+          var li = document.createElement("li");
+          li.className = "flex items-center gap-3 whitespace-nowrap text-sm font-semibold text-navy/70";
+          if (i >= caps.length) li.setAttribute("aria-hidden", "true");
+          li.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true"></span>';
+          li.appendChild(document.createTextNode(text));
+          marquee.appendChild(li);
+        });
+
+        // ── Helpers de gráficos (SVG con viewBox fijo y preserveAspectRatio="none") ──
+        // from: índice del primer valor dentro del eje; total: cantidad de posiciones del eje.
+        function pts(values, w, h, max, from, total) {
+          from = from || 0;
+          var step = w / (total || values.length + from);
+          return values.map(function (v, i) {
+            return [(i + from + 0.5) * step, h - (v / max) * h];
+          });
+        }
+        function linePath(points) {
+          return points.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+        }
+        function bandPath(upper, lower) {
+          return linePath(upper) + " " + lower.slice().reverse().map(function (p) { return "L" + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ") + " Z";
+        }
+        function spread(values, delta, sign) {
+          return values.map(function (v, i) { return v + sign * delta[i]; });
+        }
+
+        // ── Hero: forecast vs real ──
+        (function () {
+          var real = [52, 58, 55, 63, 67, 61, 70, 74, 69];
+          var fc = [54, 57, 57, 62, 66, 63, 69, 73, 71, 76, 80, 85];
+          var bars = document.getElementById("hero-bars");
+          fc.forEach(function (v, i) {
+            var isReal = i < real.length;
+            bars.insertAdjacentHTML(
+              "beforeend",
+              '<div class="flex h-full flex-1 flex-col justify-end"><div class="bar rounded-t-md ' +
+                (isReal ? "bg-gradient-to-t from-sky-200 to-sky-400" : "border border-dashed border-brand/70 bg-brand/10") +
+                '" style="height:' + (isReal ? real[i] : v) + "%;--d:" + (500 + i * 60) + 'ms"></div></div>'
+            );
+          });
+          var tail = fc.slice(8);
+          var d = [3, 5, 7, 9];
+          document.getElementById("hero-line").setAttribute("d", linePath(pts(fc, 300, 144, 100)));
+          document.getElementById("hero-band").setAttribute(
+            "d",
+            bandPath(pts(spread(tail, d, 1), 300, 144, 100, 8), pts(spread(tail, d, -1), 300, 144, 100, 8))
+          );
+        })();
+
+        // ── BI: tableros con pestañas ──
+        var tabs = [
+          {
+            id: "overview",
+            label: "Overview",
+            desc: "El pulso del negocio en una pantalla",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`,
+            kpis: [
+              ["Ventas netas", "$ 18,4 M", "+9,2%", "up"],
+              ["Margen estimado", "31,5%", "+1,3 pp", "up"],
+              ["Valor inventario", "$ 42,7 M", "−2,1%", "flat"],
+              ["Precisión predicción", "91,6%", "MAPE 8,4%", "flat"]
+            ],
+            chart: { title: "Ventas vs. compras", sub: "Evolución mensual", type: "grouped", a: [48, 52, 50, 58, 61, 57, 66, 70, 64, 74, 72, 80], b: [40, 46, 38, 49, 55, 47, 58, 52, 55, 60, 63, 66], la: "Ventas", lb: "Compras" },
+            side: { title: "Mix por categoría", rows: [["Almacén", 34], ["Bebidas", 26], ["Limpieza", 18], ["Perfumería", 12], ["Otros", 10]], unit: "%" }
+          },
+          {
+            id: "ventas",
+            label: "Ventas",
+            desc: "Qué, dónde y a quién le vendés",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/></svg>`,
+            kpis: [
+              ["Monto neto", "$ 18,4 M", "+9,2%", "up"],
+              ["Unidades", "48.210", "+6,8%", "up"],
+              ["Ticket promedio", "$ 7.850", "+2,3%", "up"],
+              ["Descuento", "4,1%", "−0,4 pp", "flat"]
+            ],
+            chart: { title: "Tendencia mensual", sub: "Hacé clic en un mes para ver el detalle", type: "area", a: [45, 49, 47, 55, 60, 56, 64, 69, 63, 73, 76, 82] },
+            side: { title: "Ventas por almacén", rows: [["Sucursal Buenos Aires", 38], ["Sucursal Córdoba", 24], ["Sucursal Rosario", 21], ["Sucursal Mendoza", 17]], unit: "%" }
+          },
+          {
+            id: "compras",
+            label: "Compras",
+            desc: "Cuánto comprás y quién cumple",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>`,
+            kpis: [
+              ["Monto comprado", "$ 12,6 M", "+4,5%", "flat"],
+              ["OTIF", "93,4%", "+2,1 pp", "up"],
+              ["Mermas", "1,8%", "−0,3 pp", "up"],
+              ["Puntuación promedio", "4,3 / 5", "+0,2", "up"]
+            ],
+            chart: { title: "Compras y mermas por mes", sub: "Barras: compras · línea: mermas", type: "barsLine", a: [40, 46, 38, 49, 55, 47, 58, 52, 55, 60, 63, 66], b: [30, 34, 28, 26, 31, 24, 22, 25, 20, 19, 21, 17] },
+            side: { title: "Top proveedores por monto", rows: [["Distribuidora Norte", 31], ["Alimentos del Sur", 24], ["Limpieza Total", 18], ["Bebidas Andinas", 15]], unit: "%" }
+          },
+          {
+            id: "inventario",
+            label: "Inventario",
+            desc: "Stock, cobertura y quiebres",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11"/><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z"/><path d="M6 13h12"/><path d="M6 17h12"/></svg>`,
+            kpis: [
+              ["Stock total", "126.480 u.", "+3,4%", "flat"],
+              ["Valor almacenado", "$ 42,7 M", "−2,1%", "flat"],
+              ["Nivel de servicio", "96,2%", "+0,8 pp", "up"],
+              ["Bajo punto de pedido", "18 art.", "requieren reposición", "down"]
+            ],
+            chart: {
+              title: "Stock vs. punto de pedido",
+              sub: "Hacé clic en una barra para ver el detalle",
+              type: "threshold",
+              items: [["Yerba", 78, 40], ["Café", 34, 45], ["Aceite", 18, 50], ["Azúcar", 66, 38], ["Harina", 52, 42], ["Fideos", 29, 35], ["Arroz", 71, 36], ["Leche", 44, 40]]
+            },
+            side: { title: "Quiebres detectados", rows: [["Aceite de girasol 1,5 L", "0 u."], ["Café en grano 500 g", "12 u."], ["Fideos tirabuzón 500 g", "20 u."], ["Leche entera 1 L", "31 u."]], list: true }
+          },
+          {
+            id: "prediccion",
+            label: "Predicción",
+            desc: "La demanda de los próximos meses",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/></svg>`,
+            kpis: [
+              ["Demanda proyectada", "52.300 u.", "+7,4%", "up"],
+              ["MAPE", "8,4%", "−1,1 pp", "up"],
+              ["Sesgo", "−1,2%", "estable", "flat"],
+              ["Modelos activos", "5", "en competencia", "flat"]
+            ],
+            chart: { title: "Forecast vs. real", sub: "Últimos 9 meses + 3 de pronóstico", type: "forecast", real: [52, 58, 55, 63, 67, 61, 70, 74, 69], fc: [54, 57, 57, 62, 66, 63, 69, 73, 71, 76, 80, 85] },
+            side: { title: "Métodos utilizados", rows: [["Holt-Winters", 34], ["XGBoost", 27], ["Prophet", 19], ["ARIMA", 12], ["Promedio móvil", 8]], unit: "%" }
+          }
+        ];
+
+        var trendIcon = { up: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 shrink-0" aria-hidden="true"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg>`, flat: "", down: "" };
+        var trendTone = { up: "text-brand", flat: "text-white/55", down: "text-red-300" };
+
+        function renderChart(c) {
+          var html = '<div class="relative h-48 sm:h-56">';
+          if (c.type === "grouped") {
+            html += '<div class="absolute inset-0 flex items-end gap-1 sm:gap-2">';
+            c.a.forEach(function (v, i) {
+              html +=
+                '<div class="flex h-full flex-1 items-end justify-center gap-0.5">' +
+                '<div class="bar w-1/2 rounded-t bg-sky-400" style="height:' + v + "%;--d:" + i * 50 + 'ms"></div>' +
+                '<div class="bar w-1/2 rounded-t bg-brand/80" style="height:' + c.b[i] + "%;--d:" + (i * 50 + 30) + 'ms"></div></div>';
+            });
+            html += "</div>";
+          } else if (c.type === "area") {
+            var p = pts(c.a, 300, 192, 100);
+            var area = linePath(p) + " L" + p[p.length - 1][0] + " 192 L" + p[0][0] + " 192 Z";
+            html +=
+              '<svg viewBox="0 0 300 192" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">' +
+              '<defs><linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8" stop-opacity="0.45"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></linearGradient></defs>' +
+              '<path class="band" d="' + area + '" fill="url(#area-fill)"/>' +
+              '<path class="line" d="' + linePath(p) + '" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
+          } else if (c.type === "barsLine") {
+            html += '<div class="absolute inset-0 flex items-end gap-1.5 sm:gap-2">';
+            c.a.forEach(function (v, i) {
+              html += '<div class="flex h-full flex-1 flex-col justify-end"><div class="bar rounded-t-md bg-gradient-to-t from-sky-500/40 to-sky-400" style="height:' + v + "%;--d:" + i * 50 + 'ms"></div></div>';
+            });
+            html +=
+              '</div><svg viewBox="0 0 300 192" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">' +
+              '<path class="line" d="' + linePath(pts(c.b, 300, 192, 100)) + '" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
+          } else if (c.type === "threshold") {
+            html += '<div class="absolute inset-0 flex items-end gap-2 sm:gap-3">';
+            c.items.forEach(function (it, i) {
+              var low = it[1] < it[2];
+              html +=
+                '<div class="relative flex h-full flex-1 flex-col justify-end">' +
+                '<div class="bar rounded-t-md ' + (low ? "bg-red-400" : "bg-emerald-400/80") + '" style="height:' + it[1] + "%;--d:" + i * 60 + 'ms"></div>' +
+                '<div class="absolute inset-x-[-3px] h-0.5 rounded bg-amber-300" style="bottom:' + it[2] + '%"></div></div>';
+            });
+            html += "</div>";
+          } else if (c.type === "forecast") {
+            html += '<div class="absolute inset-0 flex items-end gap-1.5 sm:gap-2">';
+            c.fc.forEach(function (v, i) {
+              var isReal = i < c.real.length;
+              html +=
+                '<div class="flex h-full flex-1 flex-col justify-end"><div class="bar rounded-t-md ' +
+                (isReal ? "bg-gradient-to-t from-sky-500/30 to-sky-400/80" : "border border-dashed border-brand/70 bg-brand/10") +
+                '" style="height:' + (isReal ? c.real[i] : v) + "%;--d:" + i * 50 + 'ms"></div></div>';
+            });
+            var tail = c.fc.slice(8);
+            var d = [3, 5, 7, 9];
+            html +=
+              '</div><svg viewBox="0 0 300 192" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">' +
+              '<path class="band" d="' + bandPath(pts(spread(tail, d, 1), 300, 192, 100, 8), pts(spread(tail, d, -1), 300, 192, 100, 8)) + '" fill="var(--brand)" opacity="0.2"/>' +
+              '<path class="line" d="' + linePath(pts(c.fc, 300, 192, 100)) + '" fill="none" stroke="var(--brand)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
+          }
+          html += "</div>";
+
+          var labels = c.type === "threshold" ? c.items.map(function (it) { return it[0]; }) : MONTHS;
+          html += '<div class="mt-2 flex ' + (c.type === "threshold" ? "gap-2 sm:gap-3" : "gap-1 sm:gap-2") + '">';
+          labels.forEach(function (l) { html += '<span class="flex-1 truncate text-center text-[10px] text-white/50">' + l + "</span>"; });
+          html += "</div>";
+
+          var legend = {
+            grouped: [["bg-sky-400", c.la], ["bg-brand/80", c.lb]],
+            area: [["bg-sky-400", "Monto neto"]],
+            barsLine: [["bg-sky-400", "Compras"], ["bg-red-300", "Mermas"]],
+            threshold: [["bg-emerald-400", "Stock OK"], ["bg-red-400", "Bajo punto de pedido"], ["bg-amber-300", "Punto de pedido"]],
+            forecast: [["bg-sky-400", "Real"], ["bg-brand", "Forecast"]]
+          }[c.type];
+          html += '<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/60">';
+          legend.forEach(function (l) { html += '<span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm ' + l[0] + '"></span>' + l[1] + "</span>"; });
+          html += "</div>";
+          return html;
+        }
+
+        function renderSide(s) {
+          var html = '<p class="text-sm font-semibold text-white">' + s.title + '</p><ul class="mt-4 space-y-3">';
+          s.rows.forEach(function (r, i) {
+            if (s.list) {
+              html +=
+                '<li class="flex items-center justify-between gap-3 rounded-xl bg-white/5 px-3 py-2.5">' +
+                '<span class="flex items-center gap-2 text-xs text-white/80"><span class="h-2 w-2 shrink-0 rounded-full bg-red-400"></span>' + r[0] + "</span>" +
+                '<span class="shrink-0 text-xs font-semibold text-red-300">' + r[1] + "</span></li>";
+            } else {
+              html +=
+                '<li><div class="flex justify-between text-xs"><span class="text-white/75">' + r[0] + '</span><span class="font-semibold text-white">' + r[1] + s.unit + "</span></div>" +
+                '<div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10"><div class="grow-x h-full rounded-full bg-gradient-to-r from-brand to-sky-400" style="width:' + Math.min(r[1] * 2.4, 100) + "%;--d:" + (200 + i * 90) + 'ms"></div></div></li>';
+            }
+          });
+          return html + "</ul>";
+        }
+
+        function renderPanel(t) {
+          var kpis = t.kpis
+            .map(function (k, i) {
+              return (
+                '<div class="swap-in rounded-2xl ' + (i === 0 ? "bg-white text-navy" : "border border-white/10 bg-white/5 text-white") + ' p-4" style="animation-delay:' + i * 60 + 'ms">' +
+                '<p class="text-[11px] ' + (i === 0 ? "text-slate-500" : "text-white/60") + '">' + k[0] + "</p>" +
+                '<p class="mt-1 text-xl font-extrabold tabular-nums sm:text-2xl">' + k[1] + "</p>" +
+                '<p class="mt-1 flex items-center gap-1 text-[11px] font-semibold ' + (i === 0 ? "text-emerald-700" : trendTone[k[3]]) + '">' + (trendIcon[k[3]] || "") + k[2] + "</p></div>"
+              );
+            })
+            .join("");
+          return (
+            '<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">' + kpis + "</div>" +
+            '<div class="mt-6 grid gap-6 xl:grid-cols-[1fr_260px]">' +
+            '<div class="rounded-2xl border border-white/10 bg-navy/40 p-4 sm:p-5">' +
+            '<div class="mb-4 flex flex-wrap items-baseline justify-between gap-2"><p class="font-semibold text-white">' + t.chart.title + '</p><p class="flex items-center gap-1.5 text-[11px] text-white/50"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg>' + t.chart.sub + "</p></div>" +
+            renderChart(t.chart) + "</div>" +
+            '<div class="rounded-2xl border border-white/10 bg-navy/40 p-4 sm:p-5">' + renderSide(t.side) + "</div></div>"
+          );
+        }
+
+        var tabList = document.getElementById("bi-tabs");
+        var panel = document.getElementById("bi-panel");
+        tabs.forEach(function (t, i) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.id = "tab-" + t.id;
+          b.setAttribute("role", "tab");
+          b.setAttribute("aria-controls", "bi-panel");
+          b.dataset.index = i;
+          b.className =
+            "bi-tab group flex min-h-11 shrink-0 cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand";
+          b.innerHTML =
+            '<span class="bi-tab-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors duration-200">' + t.icon + "</span>" +
+            '<span><span class="block text-sm font-bold">' + t.label + '</span><span class="bi-tab-desc hidden text-xs lg:block">' + t.desc + "</span></span>";
+          tabList.appendChild(b);
+        });
+        var tabButtons = tabList.querySelectorAll("[role=tab]");
+
+        function selectTab(index, focus) {
+          tabButtons.forEach(function (b, i) {
+            var on = i === index;
+            b.setAttribute("aria-selected", String(on));
+            b.tabIndex = on ? 0 : -1;
+            b.classList.toggle("bg-white", on);
+            b.classList.toggle("border-white", on);
+            b.classList.toggle("text-navy", on);
+            b.classList.toggle("shadow-[0_15px_40px_-15px_rgba(141,243,93,0.45)]", on);
+            b.classList.toggle("border-white/10", !on);
+            b.classList.toggle("bg-white/5", !on);
+            b.classList.toggle("text-white", !on);
+            b.classList.toggle("hover:bg-white/10", !on);
+            var icon = b.querySelector(".bi-tab-icon");
+            icon.classList.toggle("bg-brand", on);
+            icon.classList.toggle("text-navy", on);
+            icon.classList.toggle("bg-white/10", !on);
+            icon.classList.toggle("text-brand", !on);
+            var desc = b.querySelector(".bi-tab-desc");
+            desc.classList.toggle("text-slate-500", on);
+            desc.classList.toggle("text-white/55", !on);
+          });
+          panel.setAttribute("aria-labelledby", "tab-" + tabs[index].id);
+          // Volver a crear el contenido reinicia las animaciones de barras y líneas.
+          panel.innerHTML = renderPanel(tabs[index]);
+          if (focus) tabButtons[index].focus();
+        }
+        tabList.addEventListener("click", function (e) {
+          var b = e.target.closest("[role=tab]");
+          if (b) selectTab(Number(b.dataset.index));
+        });
+        tabList.addEventListener("keydown", function (e) {
+          var current = Number(document.activeElement.dataset.index);
+          if (isNaN(current)) return;
+          var next = null;
+          if (e.key === "ArrowDown" || e.key === "ArrowRight") next = (current + 1) % tabs.length;
+          if (e.key === "ArrowUp" || e.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+          if (e.key === "Home") next = 0;
+          if (e.key === "End") next = tabs.length - 1;
+          if (next !== null) {
+            e.preventDefault();
+            selectTab(next, true);
+          }
+        });
+        selectTab(0);
+
+        // ── Predicción ──
+        (function () {
+          var real = [60, 72, 68, 80, 95, 88, 102, 110, 105];
+          var fc = [105, 114, 122, 131];
+          var d = [0, 8, 12, 16];
+          var max = 160;
+          document.getElementById("pred-real").setAttribute("d", linePath(pts(real, 300, 180, max, 0, 12)));
+          document.getElementById("pred-fc").setAttribute("d", linePath(pts(fc, 300, 180, max, 8)));
+          document.getElementById("pred-band").setAttribute("d", bandPath(pts(spread(fc, d, 1), 300, 180, max, 8), pts(spread(fc, d, -1), 300, 180, max, 8)));
+
+          var models = [
+            ["Holt-Winters", "estacionalidad", 34],
+            ["XGBoost", "machine learning", 27],
+            ["Prophet", "tendencias y feriados", 19],
+            ["ARIMA", "series temporales", 12],
+            ["Promedio móvil", "línea base", 8]
+          ];
+          var chips = document.getElementById("model-chips");
+          var share = document.getElementById("model-share");
+          models.forEach(function (m, i) {
+            chips.insertAdjacentHTML(
+              "beforeend",
+              '<span class="inline-flex items-center gap-2 rounded-full border border-navy/10 bg-white px-3 py-1.5 text-sm shadow-sm">' +
+                '<span class="h-2 w-2 rounded-full ' + (i === 0 ? "bg-brand" : "bg-navy/40") + '"></span>' +
+                '<span class="font-semibold text-navy">' + m[0] + '</span><span class="text-slate-500">· ' + m[1] + "</span></span>"
+            );
+            share.insertAdjacentHTML(
+              "beforeend",
+              '<div class="flex items-center gap-3"><span class="w-28 shrink-0 text-xs text-slate-600">' + m[0] + "</span>" +
+                '<div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div class="grow-x h-full rounded-full bg-gradient-to-r from-brand to-sky-400" style="width:' + m[2] * 2.5 + "%;--d:" + (300 + i * 100) + 'ms"></div></div>' +
+                '<span class="w-9 shrink-0 text-right text-xs font-semibold text-navy">' + m[2] + "%</span></div>"
+            );
+          });
+        })();
+
+        // ── Contadores ──
+        function countUp(el) {
+          var to = Number(el.dataset.count);
+          var prefix = el.dataset.prefix || "";
+          if (reduceMotion) { el.textContent = prefix + to; return; }
+          var start = performance.now();
+          function tick(now) {
+            var p = Math.min((now - start) / 1200, 1);
+            el.textContent = prefix + Math.round(to * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        }
+
+        // ── Reveal al entrar en pantalla ──
+        var targets = document.querySelectorAll(".reveal");
+        if (!("IntersectionObserver" in window)) {
+          targets.forEach(function (el) { el.classList.add("is-visible"); });
+        } else {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("is-visible");
+                entry.target.querySelectorAll("[data-count]").forEach(countUp);
+                io.unobserve(entry.target);
+              });
+            },
+            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+          );
+          targets.forEach(function (el) { io.observe(el); });
+        }
+
+        // ── Vitrina de cobro NFC / QR ──
+        var copy = {
+          contactless: { title: "Acercá la tarjeta o el celular", text: "Mantenelo cerca del lector hasta escuchar la confirmación.", label: "Acercá una tarjeta o un celular al lector NFC" },
+          qr: { title: "Escaneá el código QR", text: "Abrí tu billetera virtual y apuntá la cámara al código.", label: "Escaneá el código QR con el celular" }
+        };
+        var stage = document.getElementById("pay-stage");
+        var illustration = document.getElementById("pay-illustration");
+        var buttons = document.querySelectorAll(".pay-mode");
+        function setMode(mode) {
+          illustration.replaceChildren(document.getElementById("tpl-" + mode).content.cloneNode(true));
+          illustration.setAttribute("aria-label", copy[mode].label);
+          document.getElementById("pay-title").textContent = copy[mode].title;
+          document.getElementById("pay-text").textContent = copy[mode].text;
+          buttons.forEach(function (b) {
+            var active = b.dataset.mode === mode;
+            b.setAttribute("aria-pressed", String(active));
+            b.classList.toggle("bg-navy", active);
+            b.classList.toggle("text-white", active);
+            b.classList.toggle("shadow", active);
+            b.classList.toggle("text-slate-600", !active);
+            b.classList.toggle("hover:text-navy", !active);
+          });
+          stage.classList.remove("swap-in");
+          void stage.offsetWidth;
+          stage.classList.add("swap-in");
+        }
+        buttons.forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.mode); }); });
+        setMode("contactless");
+      })();
+    </script>
+  </body>
+</html>
